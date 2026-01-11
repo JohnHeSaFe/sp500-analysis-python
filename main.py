@@ -14,7 +14,6 @@ def main():
     
     # 2.3 Mostrar df.head(), df.info(), df.describe() para entender estructura y tipos.
     
-    print("\n- Primeras filas -")
     print(df.head())
     
     print("- Información del Dataset -")
