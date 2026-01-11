@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('S&P_500_Stock_Prices_2014-2017.csv')
+df = pd.read_csv('data/S&P_500_Stock_Prices_2014-2017.csv')
 df['date'] = pd.to_datetime(df['date'])
 
 # 2. Pivotar la tabla: Fechas en filas, Empresas en columnas
