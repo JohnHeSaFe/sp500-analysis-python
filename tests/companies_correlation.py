@@ -1,25 +1,41 @@
-import os
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np  # Importación necesaria
 import seaborn as sns
+import matplotlib.pyplot as plt
+import os
 
-
+# 1. Cargar datos
 data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'S&P_500_Stock_Prices_2014-2017.csv')
 df = pd.read_csv(data_path)
 
+# 2. Preparar los datos
+# Pivotamos y eliminamos columnas con demasiados valores nulos para un cálculo limpio
+precios = df.pivot(index='date', columns='symbol', values='close')
+retornos = precios.pct_change().dropna(how='all')
 
-# Elegimos unas cuantas empresas famosas
-top_tech = df[df['symbol'].isin(['AAPL', 'MSFT', 'AMZN', 'ADBE', 'ADI'])]
+# 3. Calcular la matriz de correlación
+corr_matrix = retornos.corr()
 
-# Creamos una tabla donde cada columna es el precio de una empresa
-precios = top_tech.pivot(index='date', columns='symbol', values='close')
+# 4. ENCONTRAR LAS MÁS CORRELACIONADAS (Lógica corregida)
+# Creamos una máscara para ignorar la diagonal (correlación de una empresa consigo misma) 
+# y la mitad inferior (que es un espejo de la superior)
+mask = np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
+sol = corr_matrix.where(mask).stack().sort_values(ascending=False)
 
-# Calculamos la correlación
-corr_matrix = precios.pct_change().corr()
+# 5. Seleccionar las top empresas
+# Tomamos las primeras 10 parejas con mayor correlación
+top_pairs = sol.head(10)
+# Extraemos los nombres de las empresas involucradas en esas parejas
+top_symbols = sorted(list(set([symbol for pair in top_pairs.index for symbol in pair])))
 
-# Dibujamos el mapa de calor
-import seaborn as sns
-plt.figure(figsize=(8,6))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f")
-plt.title('¿Cómo se relacionan las empresas entre sí?')
+# 6. Filtrar y graficar
+final_corr = corr_matrix.loc[top_symbols, top_symbols]
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(final_corr, annot=True, cmap='RdYlGn', center=0, fmt=".2f")
+plt.title('Empresas con Mayor Correlación Automática (Análisis 2014-2017)')
+plt.tight_layout()
 plt.show()
+
+print("Parejas más correlacionadas detectadas:")
+print(top_pairs)
